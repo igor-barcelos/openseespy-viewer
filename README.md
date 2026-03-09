@@ -1,6 +1,6 @@
 # openseespy-viewer
 
-Live visual previewer for OpenSeesPy models. Monitors your model file(s) and produces a live 3D drawing that updates each time you save. Works with 2D/3dof and 3D/6dof models.
+Viewer for openseespy models. Monitors your model file(s) and produces a live 3D drawing that updates each time you save. Works with 2D/3dof and 3D/6dof models.
 
 ### Installation
 
