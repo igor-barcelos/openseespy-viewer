@@ -4,7 +4,7 @@ import sys
 import numpy as np
 import pyvista as pv
 
-from .mock import parse_py
+from .model import parse_py
 from .watcher import start_watcher
 
 # Default visual style

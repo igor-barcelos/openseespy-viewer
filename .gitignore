@@ -7,3 +7,5 @@ build/
 *.pyc
 desktop.ini
 .env
+.pyproject.toml
+.claude
