@@ -1,2 +1,9 @@
+env/
+PUBLISHING.md
 __pycache__/
+*.egg-info/
+dist/
+build/
+*.pyc
 desktop.ini
+.env
