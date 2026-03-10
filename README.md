@@ -44,9 +44,13 @@ openseespy-viewer nodes.py elements.py --refresh 1.0
 python -m viewer my_model.py
 ```
 
+### Screenshots
+
+Press **S** in the viewer window to save a screenshot. Screenshots are saved to the `images/` folder with incrementing names (`model_screenshot_001.png`, `model_screenshot_002.png`, etc.). The counter resets each time you restart the viewer. This is useful for sharing your model with AI tools like Claude Code — just ask it to look at the screenshot.
+
 ### Examples
 
-![Example usage gif](assets/demo.gif)
+![Example usage gif](assets/demo_2.gif)
 
 
 See the `examples/` directory for sample model files.
@@ -69,3 +73,4 @@ pip install pyvista numpy watchdog
 - [ ] Add support for nodes created within loop
 - [x] Add support for 3D models
 - [ ] Add support for rotational dofs
+- [x] Screenshot capture (press S in viewer)

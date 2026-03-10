@@ -9,3 +9,5 @@ desktop.ini
 .env
 .pyproject.toml
 .claude
+model_screenshot.png
+images/

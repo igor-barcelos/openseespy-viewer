@@ -1,8 +1,12 @@
 """Main viewer logic: builds the 3D scene and runs the live preview loop."""
 
+import os
 import sys
 import numpy as np
 import pyvista as pv
+
+SCREENSHOT_DIR = os.path.join(os.getcwd(), 'images')
+_screenshot_counter = 0
 
 from .model import parse_py
 from .watcher import start_watcher
@@ -195,6 +199,16 @@ def view(*modelfiles, **kwargs):
         if ndm == 2:
             plotter.view_xy()
         plotter.render()
+
+    def _screenshot():
+        global _screenshot_counter
+        os.makedirs(SCREENSHOT_DIR, exist_ok=True)
+        _screenshot_counter += 1
+        path = os.path.join(SCREENSHOT_DIR, f'model_screenshot_{_screenshot_counter:03d}.png')
+        plotter.screenshot(path)
+        print(f'Screenshot saved to {path}')
+
+    plotter.add_key_event('s', _screenshot)
 
     plotter.show(interactive_update=True)
     plotter.add_timer_event(

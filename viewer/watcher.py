@@ -13,8 +13,18 @@ class ModelFileHandler(FileSystemEventHandler):
         self.changed = threading.Event()
         self.changed.set()  # trigger initial draw
 
-    def on_modified(self, event):
+    def _check(self, event):
         if os.path.abspath(event.src_path) in self.filenames:
+            self.changed.set()
+
+    def on_modified(self, event):
+        self._check(event)
+
+    def on_created(self, event):
+        self._check(event)
+
+    def on_moved(self, event):
+        if os.path.abspath(event.dest_path) in self.filenames:
             self.changed.set()
 
 
