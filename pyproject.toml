@@ -10,7 +10,7 @@ readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.8"
 authors = [
-    { name = "James Maguire" },
+    { name = "Igor Barcelos" },
 ]
 keywords = ["opensees", "openseespy", "structural", "visualization", "pyvista"]
 classifiers = [
