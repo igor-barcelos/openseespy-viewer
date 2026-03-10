@@ -28,7 +28,7 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/barce/opensees-model-view"
+Homepage = "https://github.com/igor-barcelos/openseespy-viewer"
 
 [tool.setuptools.packages.find]
 include = ["viewer*"]
