@@ -21,3 +21,9 @@ ops.element('truss', 4, 4, 5)
 # Boundary conditions
 ops.fix(1, 1, 1, 1)
 ops.fix(5, 1, 1, 0)
+
+# Loads
+ops.timeSeries('Linear', 1)
+ops.pattern('Plain', 1, 1)
+ops.load(3, 10.0, -5.0, 0.0)
+ops.eleLoad('-ele', 2, '-type', '-beamUniform', -2.0)

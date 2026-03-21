@@ -7,13 +7,14 @@ import types
 
 class Model:
     """A mock replacement for openseespy.opensees that records model data
-    instead of building a real OpenSees model.
+    instead of building a real OpenSeesPy model.
     """
     def __init__(self):
         self.nodes = []
         self.elements = []
         self.fixities = []
         self.ndm = 2
+        self.nodal_loads = []
 
     def model(self, *args):
         args = [str(a) for a in args]
@@ -30,6 +31,15 @@ class Model:
     def fix(self, tag, *dofs):
         self.fixities.append((int(tag),) + tuple(int(d) for d in dofs))
 
+    def load(self, tag, *values):
+        self.nodal_loads.append((int(tag),) + tuple(float(v) for v in values))
+
+    def timeSeries(self, *args, **kwargs):
+        pass
+
+    def pattern(self, *args, **kwargs):
+        pass
+
     def __getattr__(self, name):
         # Catch-all: silently ignore any other ops.xxx() call
         return lambda *args, **kwargs: None
@@ -38,7 +48,7 @@ class Model:
 def parse_py(pyfiles):
     """Parse OpenSeesPy (.py) files by mocking the openseespy module and
     executing the user's script. All ops.node/element/fix calls are recorded.
-    Returns (nodes, elements, fixities, ndm).
+    Returns (nodes, elements, fixities, ndm, nodal_loads).
     """
     mock = Model()
 
@@ -70,4 +80,4 @@ def parse_py(pyfiles):
             elif key in sys.modules:
                 del sys.modules[key]
 
-    return mock.nodes, mock.elements, mock.fixities, mock.ndm
+    return (mock.nodes, mock.elements, mock.fixities, mock.ndm, mock.nodal_loads)

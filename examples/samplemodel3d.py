@@ -83,3 +83,10 @@ ops.fix( 9, 1, 1, 1, 0, 0, 0)
 ops.fix(12, 1, 1, 1, 0, 0, 0)
 ops.fix(16, 1, 1, 1, 0, 0, 0)
 ops.fix(20, 1, 1, 1, 0, 0, 0)
+
+# Loads
+ops.timeSeries('Linear', 1)
+
+ops.pattern('Plain', 1, 1)
+ops.load(4, 5.0, 0.0, -10.0, 0.0, 0.0, 0.0)
+ops.load(8, 5.0, 0.0, -10.0, 0.0, 0.0, 0.0)

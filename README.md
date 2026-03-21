@@ -44,14 +44,17 @@ openseespy-viewer nodes.py elements.py --refresh 1.0
 python -m viewer my_model.py
 ```
 
+### Live reload
+
+The viewer watches your model file(s) for changes and redraws automatically on save. It also watches the viewer source files — any change to the viewer library is hot-reloaded without restarting the window.
+
 ### Screenshots
 
-Press **S** in the viewer window to save a screenshot. Screenshots are saved to the `images/` folder with incrementing names (`model_screenshot_001.png`, `model_screenshot_002.png`, etc.). The counter resets each time you restart the viewer. This is useful for sharing your model with AI tools like Claude Code — just ask it to look at the screenshot.
+Press **S** in the viewer window to save a screenshot. Screenshots are saved to the `images/` folder with incrementing names (`model_screenshot_001.png`, `model_screenshot_002.png`, etc.). The counter resets each time you restart the viewer.
 
 ### Examples
 
 ![Example usage gif](assets/demo_2.gif)
-
 
 See the `examples/` directory for sample model files.
 
@@ -69,8 +72,10 @@ pip install pyvista numpy watchdog
 - [x] Add support for fixity conditions
 - [x] Add support for variables and expressions in scripts
 - [x] Add support for watching multiple files (for models made up of many files)
-- [ ] Add support for loads
-- [ ] Add support for nodes created within loop
+- [x] Add support for nodal loads
+- [x] Add support for nodes created within loop
 - [x] Add support for 3D models
-- [ ] Add support for rotational dofs
 - [x] Screenshot capture (press S in viewer)
+- [x] Hot reload viewer source without restarting
+- [ ] Add support for element loads
+- [ ] Add support for rotational dofs

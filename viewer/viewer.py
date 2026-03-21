@@ -2,6 +2,7 @@
 
 import os
 import sys
+import importlib
 import numpy as np
 import pyvista as pv
 
@@ -23,6 +24,8 @@ DEFAULTS = dict(
     offset_ratio=0.02,
     bc_arrow_scale=0.3,
     min_refresh_interval=0.5,
+    load_colour='red',
+    load_arrow_scale=0.06,
 )
 
 
@@ -39,7 +42,7 @@ def _nodecoords(nodetag, nodes, ndm):
 
 def _build_scene(plotter, modelfiles, ndm, style):
     """Parse model files and add all geometry to the plotter."""
-    nodes, elements, fixities, _ = parse_py(modelfiles)
+    nodes, elements, fixities, _, nodal_loads = parse_py(modelfiles)
 
     if not nodes:
         return
@@ -155,6 +158,86 @@ def _build_scene(plotter, modelfiles, ndm, style):
                                          tip_radius=0.15, shaft_radius=0.05)
                         plotter.add_mesh(arrow, color='black')
 
+    # --- Display nodal loads ---
+    if nodal_loads:
+        all_magnitudes = []
+        for nl in nodal_loads:
+            values = nl[1:]
+            if ndm == 2:
+                force_mag = np.linalg.norm(values[:2]) if len(values) >= 2 else 0
+                moment_mag = abs(values[2]) if len(values) >= 3 else 0
+            else:
+                force_mag = np.linalg.norm(values[:3]) if len(values) >= 3 else 0
+                moment_mag = np.linalg.norm(values[3:6]) if len(values) >= 6 else 0
+            if force_mag > 0:
+                all_magnitudes.append(force_mag)
+            if moment_mag > 0:
+                all_magnitudes.append(moment_mag)
+
+        if all_magnitudes:
+            max_mag = max(all_magnitudes)
+            load_scale = (model_size * style['load_arrow_scale']) / max_mag
+            arrow_size = model_size * style['load_arrow_scale']
+
+            for nl in nodal_loads:
+                tag = nl[0]
+                values = nl[1:]
+                coords = _nodecoords(tag, nodes, ndm)
+                if coords is None:
+                    continue
+
+                # Force components
+                if ndm == 2:
+                    force = np.array([values[0] if len(values) > 0 else 0,
+                                      values[1] if len(values) > 1 else 0,
+                                      0.0])
+                else:
+                    force = np.array([values[0] if len(values) > 0 else 0,
+                                      values[1] if len(values) > 1 else 0,
+                                      values[2] if len(values) > 2 else 0])
+
+                fmag = np.linalg.norm(force)
+                if fmag > 1e-12:
+                    fdir = force / fmag
+                    length = fmag * load_scale
+                    start = coords - fdir * length
+                    arrow = pv.Arrow(start=start, direction=fdir,
+                                     scale=length, tip_length=0.3,
+                                     tip_radius=0.12, shaft_radius=0.04)
+                    plotter.add_mesh(arrow, color=style['load_colour'])
+
+                # Moment components
+                if ndm == 2:
+                    mz = values[2] if len(values) > 2 else 0
+                    if abs(mz) > 1e-12:
+                        arc_radius = arrow_size * 0.8
+                        arc = pv.CircularArc(
+                            [coords[0] + arc_radius, coords[1], coords[2]],
+                            [coords[0], coords[1] + arc_radius, coords[2]],
+                            coords, negative=(mz < 0), resolution=24)
+                        plotter.add_mesh(arc, color=style['load_colour'],
+                                         line_width=2)
+                else:
+                    moments = np.array([
+                        values[3] if len(values) > 3 else 0,
+                        values[4] if len(values) > 4 else 0,
+                        values[5] if len(values) > 5 else 0])
+                    arc_radius = arrow_size * 0.8
+                    axes_info = [
+                        (moments[0], [0, 1, 0], [0, 0, 1]),
+                        (moments[1], [0, 0, 1], [1, 0, 0]),
+                        (moments[2], [1, 0, 0], [0, 1, 0]),
+                    ]
+                    for mval, dir1, dir2 in axes_info:
+                        if abs(mval) > 1e-12:
+                            p1 = coords + np.array(dir1) * arc_radius
+                            p2 = coords + np.array(dir2) * arc_radius
+                            arc = pv.CircularArc(p1, p2, coords,
+                                                 negative=(mval < 0),
+                                                 resolution=24)
+                            plotter.add_mesh(arc, color=style['load_colour'],
+                                             line_width=2)
+
 
 def view(*modelfiles, **kwargs):
     """Open a live viewer for the given OpenSeesPy model file(s).
@@ -174,10 +257,10 @@ def view(*modelfiles, **kwargs):
     style = {**DEFAULTS, **kwargs}
 
     # Determine 2D or 3D
-    _, _, _, ndm = parse_py(modelfiles)
+    _, _, _, ndm, _ = parse_py(modelfiles)
 
     # Start file watcher
-    observer, file_handler = start_watcher(modelfiles)
+    observer, file_handler, lib_handler = start_watcher(modelfiles)
 
     # Create plotter
     plotter = pv.Plotter(title='OpenSeesPy Viewer - ' + ', '.join(modelfiles))
@@ -191,11 +274,26 @@ def view(*modelfiles, **kwargs):
         plotter.enable_parallel_projection()
 
     def _update(step):
-        if not file_handler.changed.is_set():
+        need_redraw = file_handler.changed.is_set()
+
+        if lib_handler.changed.is_set():
+            lib_handler.changed.clear()
+            try:
+                from viewer import model as _model_mod
+                importlib.reload(_model_mod)
+                importlib.reload(sys.modules[__name__])
+                style.update({**sys.modules[__name__].DEFAULTS, **kwargs})
+                print("[HMR] Viewer reloaded.")
+            except Exception as e:
+                print(f"[HMR] Reload failed: {e}")
+            need_redraw = True
+
+        if not need_redraw:
             return
+
         file_handler.changed.clear()
         plotter.clear()
-        _build_scene(plotter, modelfiles, ndm, style)
+        sys.modules[__name__]._build_scene(plotter, modelfiles, ndm, style)
         if ndm == 2:
             plotter.view_xy()
         plotter.render()
